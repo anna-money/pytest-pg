@@ -1,3 +1,7 @@
+## v0.0.4 (2021-12-10)
+
+* Fix is_postgres_ready usage
+
 ## v0.0.3 (2021-12-10)
 
 * Fix uuid generation

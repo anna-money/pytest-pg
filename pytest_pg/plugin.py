@@ -66,19 +66,18 @@ def postgres():
     try:
         docker_client.start(container=container["Id"])
         delay = 0.001
+        params = dict(database="postgres", user="postgres", password="mysecretpassword", host=host, port=port)
+
         for i in range(32):
-            try:
-                if is_postgres_ready(
-                    database="postgres", user="postgres", password="mysecretpassword", host=host, port=port
-                ):
-                    break
-            except psycopg2.Error:
-                time.sleep(delay)
-                delay *= 2
+            if is_postgres_ready(**params):
+                break
+
+            time.sleep(delay)
+            delay *= 2
         else:
             pytest.fail("Cannot start postgres")
 
-        yield dict(database="postgres", user="postgres", password="mysecretpassword", host=host, port=port)
+        yield params
     finally:
         docker_client.kill(container=container["Id"])
         docker_client.remove_container(container["Id"])
