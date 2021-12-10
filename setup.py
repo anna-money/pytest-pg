@@ -32,6 +32,8 @@ with open("CHANGELOG.md", "r") as fh:
 
 long_description = "\r\n".join(long_description_parts)
 
+# custom PyPI classifier for pytest plugins
+classifiers = ["Framework :: Pytest"],
 setup(
     name="pytest_pg",
     version=read_version(),
@@ -60,7 +62,11 @@ setup(
         "Operating System :: OS Independent",
         "Environment :: Web Environment",
         "Development Status :: 5 - Production/Stable",
-        "Framework :: AsyncIO",
-        "Typing :: Typed",
+        "Framework :: Pytest"
     ],
+    entry_points = {
+        'pytest11': [
+            'postgres = pytest_pg.plugin'
+        ]
+    }
 )
