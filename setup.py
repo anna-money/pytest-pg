@@ -64,7 +64,7 @@ setup(
         "Development Status :: 5 - Production/Stable",
         "Framework :: Pytest"
     ],
-    entry_points = {
+    entry_points={
         'pytest11': [
             'postgres = pytest_pg.plugin'
         ]

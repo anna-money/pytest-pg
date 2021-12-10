@@ -50,7 +50,7 @@ def postgres():
 
     container_args = dict(
         image="postgres",
-        name=str(uuid),
+        name=str(uuid.uuid4()),
         ports=[5432],
         detach=True,
     )
@@ -66,7 +66,7 @@ def postgres():
     try:
         docker_client.start(container=container["Id"])
         delay = 0.001
-        for i in range(42):
+        for i in range(32):
             try:
                 if is_postgres_ready(
                     database="postgres", user="postgres", password="mysecretpassword", host=host, port=port
