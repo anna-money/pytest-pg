@@ -14,7 +14,7 @@ def _try_get_is_postgres_ready_based_on_psycopg2():
             try:
                 with psycopg2.connect(**params):
                     return True
-            except psycopg2.Error:
+            except psycopg2.OperationalError:
                 logger.debug("Failed to connect to postgresql", exc_info=True)
                 return False
 
