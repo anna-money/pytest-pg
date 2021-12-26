@@ -4,8 +4,8 @@ from pathlib import Path
 from setuptools import setup
 
 install_requires = [
-    'docker',
-    'pytest',
+    "docker>=5.0.0",
+    "pytest>=6.0.0",
 ]
 
 
@@ -49,6 +49,7 @@ setup(
     license="MIT",
     packages=["pytest_pg"],
     package_dir={"pytest_pg": "./pytest_pg"},
+    package_data={"pytest_pg": ["py.typed"]},
     install_requires=install_requires,
     include_package_data=True,
     classifiers=[
@@ -64,8 +65,8 @@ setup(
         "Framework :: Pytest"
     ],
     entry_points={
-        'pytest11': [
-            'pytest_pg = pytest_pg.plugin',
+        "pytest11": [
+            "pytest_pg = pytest_pg",
         ]
     }
 )

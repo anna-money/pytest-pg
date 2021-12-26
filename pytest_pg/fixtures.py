@@ -2,6 +2,7 @@ import contextlib
 import dataclasses
 import time
 import uuid
+from typing import Generator
 
 import docker
 import pytest
@@ -16,7 +17,7 @@ DEFAULT_PG_DATABASE = "postgres"
 
 
 @dataclasses.dataclass(frozen=True)
-class PostgresCredentials:
+class PG:
     host: str
     port: int
     user: str
@@ -25,7 +26,7 @@ class PostgresCredentials:
 
 
 @contextlib.contextmanager
-def run_pg(image, ready_timeout=30.0):
+def run_pg(image: str, ready_timeout: float = 30.0) -> Generator[PG, None, None]:
     docker_client = docker.APIClient(version="auto")
 
     docker_client.pull(image)
@@ -58,9 +59,9 @@ def run_pg(image, ready_timeout=30.0):
 
             time.sleep(0.5)
         else:
-            raise Exception(f"Failed to start postgres using {image} in {ready_timeout} seconds")
+            pytest.fail(f"Failed to start postgres using {image} in {ready_timeout} seconds")
 
-        yield PostgresCredentials(
+        yield PG(
             host=LOCALHOST,
             port=unused_port,
             user=DEFAULT_PG_USER,
@@ -73,30 +74,30 @@ def run_pg(image, ready_timeout=30.0):
 
 
 @pytest.fixture(scope="session")
-def pg():
-    with run_pg("postgres:latest") as credentials:
-        yield credentials
+def pg() -> Generator[PG, None, None]:
+    with run_pg("postgres:latest") as pg:
+        yield pg
 
 
 @pytest.fixture(scope="session")
-def pg_11():
-    with run_pg("postgres:11") as credentials:
-        yield credentials
+def pg_11() -> Generator[PG, None, None]:
+    with run_pg("postgres:11") as pg:
+        yield pg
 
 
 @pytest.fixture(scope="session")
-def pg_12():
-    with run_pg("postgres:12") as credentials:
-        yield credentials
+def pg_12() -> Generator[PG, None, None]:
+    with run_pg("postgres:12") as pg:
+        yield pg
 
 
 @pytest.fixture(scope="session")
-def pg_13():
-    with run_pg("postgres:13") as credentials:
-        yield credentials
+def pg_13() -> Generator[PG, None, None]:
+    with run_pg("postgres:13") as pg:
+        yield pg
 
 
 @pytest.fixture(scope="session")
-def pg_14():
-    with run_pg("postgres:14") as credentials:
-        yield credentials
+def pg_14() -> Generator[PG, None, None]:
+    with run_pg("postgres:14") as pg:
+        yield pg

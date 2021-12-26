@@ -3,11 +3,11 @@ name: CI
 on:
   push:
     branches:
-      - main
+      - master
     tags: [ 'v*' ]
   pull_request:
     branches:
-      - main
+      - master
 
 
 jobs:
@@ -32,6 +32,9 @@ jobs:
     - name: Lint
       run: |
         make lint
+    - name: Tests
+      run: |
+        make test
 
   deploy:
     name: Deploy
