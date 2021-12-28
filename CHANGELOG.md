@@ -1,3 +1,8 @@
+## v0.0.9 (2021-12-28)
+
+* Disable fsync, full_page_writes, synchronous_commit to speedup the tests
+
+
 ## v0.0.8 (2021-12-26)
 
 * Add typing marker, mypy. Run tests in CI

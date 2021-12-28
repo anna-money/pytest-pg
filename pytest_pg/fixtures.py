@@ -40,6 +40,7 @@ def run_pg(image: str, ready_timeout: float = 30.0) -> Generator[PG, None, None]
         detach=True,
         host_config=docker_client.create_host_config(port_bindings={5432: (LOCALHOST, unused_port)}),
         environment={"POSTGRES_HOST_AUTH_METHOD": "trust"},
+        command="-c fsync=off -c full_page_writes=off -c synchronous_commit=off",
     )
 
     try:
