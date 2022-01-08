@@ -1,3 +1,8 @@
+## v0.0.10 (2022-01-08)
+
+* Volumes used to remain after running test consuming disk space
+
+
 ## v0.0.9 (2021-12-28)
 
 * Disable fsync, full_page_writes, synchronous_commit to speedup the tests
