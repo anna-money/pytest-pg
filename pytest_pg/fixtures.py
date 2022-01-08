@@ -41,12 +41,10 @@ def run_pg(image: str, ready_timeout: float = 30.0) -> Generator[PG, None, None]
         ports=[5432],
         detach=True,
         host_config=docker_client.create_host_config(
-            port_bindings={5432: (LOCALHOST, unused_port)},
-            tmpfs=[postgresql_data_path]
+            port_bindings={5432: (LOCALHOST, unused_port)}, tmpfs=[postgresql_data_path]
         ),
-        environment={"POSTGRES_HOST_AUTH_METHOD": "trust",
-                     "PGDATA": postgresql_data_path},
-        command="-c fsync=off -c full_page_writes=off -c synchronous_commit=off"
+        environment={"POSTGRES_HOST_AUTH_METHOD": "trust", "PGDATA": postgresql_data_path},
+        command="-c fsync=off -c full_page_writes=off -c synchronous_commit=off",
     )
 
     try:
@@ -56,11 +54,11 @@ def run_pg(image: str, ready_timeout: float = 30.0) -> Generator[PG, None, None]
 
         while time.time() - started_at < ready_timeout:
             if is_pg_ready(
-                    host=LOCALHOST,
-                    port=unused_port,
-                    database=DEFAULT_PG_DATABASE,
-                    user=DEFAULT_PG_USER,
-                    password=DEFAULT_PG_PASSWORD,
+                host=LOCALHOST,
+                port=unused_port,
+                database=DEFAULT_PG_DATABASE,
+                user=DEFAULT_PG_USER,
+                password=DEFAULT_PG_PASSWORD,
             ):
                 break
 
