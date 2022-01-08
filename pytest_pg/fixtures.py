@@ -71,7 +71,7 @@ def run_pg(image: str, ready_timeout: float = 30.0) -> Generator[PG, None, None]
         )
     finally:
         docker_client.kill(container=container["Id"])
-        docker_client.remove_container(container["Id"])
+        docker_client.remove_container(container["Id"], v=True, force=True)
 
 
 @pytest.fixture(scope="session")
