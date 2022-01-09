@@ -7,7 +7,7 @@ from .fixtures import PG, pg, pg_11, pg_12, pg_13, pg_14, run_pg  # noqa
 
 __all__: Tuple[str, ...] = ("PG", "run_pg", "pg", "pg_11", "pg_12", "pg_13", "pg_14")
 
-__version__ = "0.0.10"
+__version__ = "0.0.11"
 
 version = f"{__version__}, Python {sys.version}"
 

@@ -1,3 +1,8 @@
+## v0.0.11 (2022-01-09)
+
+* Move volume to tmpfs
+
+
 ## v0.0.10 (2022-01-08)
 
 * Volumes used to remain after running test consuming disk space
