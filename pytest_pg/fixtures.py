@@ -33,13 +33,17 @@ def run_pg(image: str, ready_timeout: float = 30.0) -> Generator[PG, None, None]
 
     unused_port = find_unused_local_port()
 
+    postgresql_data_path = "/var/lib/postgresql/data"
+
     container = docker_client.create_container(
         image=image,
         name=f"pytest-pg-{uuid.uuid4()}",
         ports=[5432],
         detach=True,
-        host_config=docker_client.create_host_config(port_bindings={5432: (LOCALHOST, unused_port)}),
-        environment={"POSTGRES_HOST_AUTH_METHOD": "trust"},
+        host_config=docker_client.create_host_config(
+            port_bindings={5432: (LOCALHOST, unused_port)}, tmpfs=[postgresql_data_path]
+        ),
+        environment={"POSTGRES_HOST_AUTH_METHOD": "trust", "PGDATA": postgresql_data_path},
         command="-c fsync=off -c full_page_writes=off -c synchronous_commit=off",
     )
 
@@ -71,7 +75,7 @@ def run_pg(image: str, ready_timeout: float = 30.0) -> Generator[PG, None, None]
         )
     finally:
         docker_client.kill(container=container["Id"])
-        docker_client.remove_container(container["Id"], v=True, force=True)
+        docker_client.remove_container(container["Id"], v=True)
 
 
 @pytest.fixture(scope="session")
