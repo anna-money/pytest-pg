@@ -1,3 +1,8 @@
+## v0.0.12 (2022-01-18)
+
+* Ditch logging because it seems to be useless
+
+
 ## v0.0.11 (2022-01-09)
 
 * Move volume to tmpfs

@@ -1,9 +1,6 @@
 import asyncio
-import logging
 import socket
 from typing import Any, Optional, Protocol
-
-logger = logging.getLogger(__package__)
 
 
 class IsReadyFunc(Protocol):
@@ -29,12 +26,10 @@ def _try_get_is_postgres_ready_based_on_psycopg2() -> Optional[IsReadyFunc]:
                 with psycopg2.connect(**params):
                     return True
             except psycopg2.OperationalError:
-                logger.debug("Failed to connect to postgresql", exc_info=True)
                 return False
 
         return _is_postgres_ready
     except ImportError:
-        logger.debug("Failed to find psycopg2")
         return None
 
 
@@ -50,7 +45,6 @@ def _try_get_is_postgres_ready_based_on_asyncpg() -> Optional[IsReadyFunc]:
                     await connection.close()
                     return True
                 except (asyncpg.exceptions.PostgresError, OSError):
-                    logger.debug("Failed to connect to postgresql", exc_info=True)
                     return False
 
             return asyncio.run(_is_postgres_ready_async())
@@ -58,7 +52,6 @@ def _try_get_is_postgres_ready_based_on_asyncpg() -> Optional[IsReadyFunc]:
         return _is_postgres_ready
 
     except ImportError:
-        logger.debug("Failed to find asyncpg")
         return None
 
 
