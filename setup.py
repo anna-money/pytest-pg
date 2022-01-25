@@ -37,7 +37,7 @@ classifiers = ["Framework :: Pytest"],
 setup(
     name="pytest_pg",
     version=read_version(),
-    description="Helps to run PostgreSQL in docker as pytest fixture",
+    description="A tiny plugin for pytest which runs PostgreSQL in Docker,
     long_description=long_description,
     long_description_content_type="text/markdown",
     platforms=["macOS", "POSIX", "Windows"],
