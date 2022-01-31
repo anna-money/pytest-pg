@@ -64,7 +64,7 @@ def run_pg(image: str, ready_timeout: float = 30.0) -> Generator[PG, None, None]
 
             time.sleep(0.5)
         else:
-            pytest.fail(f"Failed to start postgres using {image} in {ready_timeout} seconds")
+            pytest.fail(f"Failed to start postgres using {image} in {ready_timeout} seconds. Container reports:\n{docker_client.logs(container['Id']).decode()}")
 
         yield PG(
             host=LOCALHOST,
