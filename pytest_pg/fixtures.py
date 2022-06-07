@@ -44,7 +44,7 @@ def run_pg(image: str, ready_timeout: float = 30.0) -> Generator[PG, None, None]
             port_bindings={5432: (LOCALHOST, unused_port)}, tmpfs=[postgresql_data_path]
         ),
         environment={"POSTGRES_HOST_AUTH_METHOD": "trust", "PGDATA": postgresql_data_path},
-        command="-c fsync=off -c full_page_writes=off -c synchronous_commit=off",
+        command="-c fsync=off -c full_page_writes=off -c synchronous_commit=off -c bgwriter_lru_maxpages=0",
     )
 
     try:
