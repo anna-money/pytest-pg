@@ -1,3 +1,8 @@
+## v0.0.13 (2022-06-07)
+
+* Set bgwriter_lru_maxpages to 0
+
+
 ## v0.0.12 (2022-01-18)
 
 * Ditch logging because it seems to be useless
