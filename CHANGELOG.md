@@ -1,3 +1,9 @@
+## v0.0.14 (2022-09-19)
+
+* Disable jit by default
+* Set bgwriter_lru_maxpages
+
+
 ## v0.0.12 (2022-01-18)
 
 * Ditch logging because it seems to be useless
