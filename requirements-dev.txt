@@ -6,4 +6,4 @@ setuptools==65.4.0
 wheel==0.37.1
 twine==4.0.1
 docker==6.0.0
-mypy==0.981
+mypy==0.982
