@@ -109,3 +109,9 @@ def pg_13() -> Generator[PG, None, None]:
 def pg_14() -> Generator[PG, None, None]:
     with run_pg("postgres:14") as pg:
         yield pg
+
+
+@pytest.fixture(scope="session")
+def pg_15() -> Generator[PG, None, None]:
+    with run_pg("postgres:15") as pg:
+        yield pg
