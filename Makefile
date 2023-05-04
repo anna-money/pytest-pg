@@ -22,3 +22,6 @@ test:
 
 pyenv:
 	echo pytest_pg > .python-version && pyenv install -s 3.10.0 && pyenv virtualenv -f 3.10.0 pytest_pg
+
+pyenv-delete:
+	pyenv virtualenv-delete -f pytest_pg
