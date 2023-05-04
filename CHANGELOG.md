@@ -1,3 +1,9 @@
+## v0.0.15 (2023-05-04)
+
+* Pin version of `urllib3` ([see for more details](https://github.com/docker/docker-py/issues/3113))
+* Add `pg_15` fixture
+
+
 ## v0.0.14 (2022-09-19)
 
 * Disable jit by default
