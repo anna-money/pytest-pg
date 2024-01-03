@@ -23,3 +23,7 @@ def test_pg_14(pg_14: pytest_pg.PG) -> None:
 
 def test_pg_15(pg_15: pytest_pg.PG) -> None:
     assert pg_15
+
+
+def test_pg_16(pg_16: pytest_pg.PG) -> None:
+    assert pg_16
