@@ -33,6 +33,23 @@ def _try_get_is_postgres_ready_based_on_psycopg2() -> Optional[IsReadyFunc]:
         return None
 
 
+def _try_get_is_postgres_ready_based_on_psycopg3() -> Optional[IsReadyFunc]:
+    try:
+        import psycopg
+
+        def _is_postgres_ready(**params: Any) -> bool:
+            try:
+                params.pop("database")
+                with psycopg.connect(**params):
+                    return True
+            except psycopg.OperationalError:
+                return False
+
+        return _is_postgres_ready
+    except ImportError:
+        return None
+
+
 def _try_get_is_postgres_ready_based_on_asyncpg() -> Optional[IsReadyFunc]:
     try:
         # noinspection PyPackageRequirements
@@ -65,6 +82,7 @@ def _get_dummy_is_postgresql_ready() -> IsReadyFunc:
 is_pg_ready = (
     _try_get_is_postgres_ready_based_on_asyncpg()
     or _try_get_is_postgres_ready_based_on_psycopg2()
+    or _try_get_is_postgres_ready_based_on_psycopg3()
     or _get_dummy_is_postgresql_ready()
 )
 
