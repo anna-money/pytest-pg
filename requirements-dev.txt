@@ -2,7 +2,7 @@ pytest==7.4.4
 isort==5.13.2
 flake8==7.0.0
 black==23.12.1
-setuptools==69.0.3
+setuptools==69.2.0
 wheel==0.42.0
 twine==4.0.2
 docker==7.0.0
