@@ -1,3 +1,8 @@
+## v0.0.17 (2024-04-03)
+
+* Override docker host with env variable
+
+
 ## v0.0.15 (2023-05-04)
 
 * Pin version of `urllib3` ([see for more details](https://github.com/docker/docker-py/issues/3113))
