@@ -1,9 +1,10 @@
 import contextlib
 import dataclasses
+import os
 import time
 import uuid
 from typing import Generator
-import os
+
 import docker
 import pytest
 
