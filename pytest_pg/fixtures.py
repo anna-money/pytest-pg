@@ -10,7 +10,6 @@ import pytest
 from .utils import find_unused_local_port, is_pg_ready
 
 LOCALHOST = "127.0.0.1"
-DOCKER_BASE_URL = os.getenv("DOCKER_HOST", None)
 DEFAULT_PG_USER = "postgres"
 DEFAULT_PG_PASSWORD = "mysecretpassword"
 DEFAULT_PG_DATABASE = "postgres"
@@ -27,7 +26,7 @@ class PG:
 
 @contextlib.contextmanager
 def run_pg(image: str, ready_timeout: float = 30.0) -> Generator[PG, None, None]:
-    docker_client = docker.APIClient(base_url=DOCKER_BASE_URL, version="auto")
+    docker_client = docker.APIClient(base_url=os.getenv("DOCKER_HOST"), version="auto")
 
     docker_client.pull(image)
 
