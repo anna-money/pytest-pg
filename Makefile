@@ -25,3 +25,8 @@ pyenv:
 
 pyenv-delete:
 	pyenv virtualenv-delete -f pytest_pg
+
+
+dists:
+	python setup.py sdist bdist_wheel
+	twine check dist/*
