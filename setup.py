@@ -6,7 +6,7 @@ from setuptools import setup
 install_requires = [
     "docker>=5.0.0",
     "pytest>=6.0.0",
-    "urllib3>=1.26.0,<2.0.0",
+    "urllib3>=2.2.2,<3.0.0",
     "requests<2.32.0",
 ]
 
