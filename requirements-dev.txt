@@ -6,6 +6,6 @@ setuptools==69.5.1
 wheel==0.43.0
 twine==5.0.0
 docker==7.0.0
-mypy==1.9.0
+mypy==1.10.1
 urllib3>=1.26.0,<2.0.0
 requests<2.32.0
