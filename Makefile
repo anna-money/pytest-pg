@@ -10,7 +10,7 @@ isort:
 	@isort --line-length 120 --use-parentheses --multi-line 3 --combine-as --trailing-comma pytest_pg tests
 
 flake8:
-	@flake8 --max-line-length 120 --ignore C901,C812,E203 --extend-ignore W503 pytest_pg tests
+	@flake8 --max-line-length 120 --ignore C901,C812,E203,E704 --extend-ignore W503 pytest_pg tests
 
 mypy:
 	@mypy --strict --ignore-missing-imports pytest_pg tests
@@ -21,7 +21,7 @@ test:
 	@python3 -m pytest -vv --rootdir tests .
 
 pyenv:
-	echo pytest_pg > .python-version && pyenv install -s 3.12 && pyenv virtualenv -f 3.12 pytest_pg
+	echo pytest_pg > .python-version && pyenv install -s 3.13 && pyenv virtualenv -f 3.13 pytest_pg
 
 pyenv-delete:
 	pyenv virtualenv-delete -f pytest_pg
