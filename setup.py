@@ -4,10 +4,8 @@ from pathlib import Path
 from setuptools import setup
 
 install_requires = [
-    "docker>=6.1.0",
-    "pytest>=6.0.0",
-    "urllib3>=1.26.0,<3.0.0",
-    "requests<2.32.0",
+    "docker>=7.0.0",
+    "pytest>=8.0.0",
 ]
 
 
@@ -44,7 +42,7 @@ setup(
     long_description_content_type="text/markdown",
     platforms=["macOS", "POSIX", "Windows"],
     author="Yury Pliner",
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     project_urls={},
     url="https://github.com/anna-money/pytest-pg",
     author_email="yury.pliner@gmail.com",
@@ -59,11 +57,11 @@ setup(
         "Intended Audience :: Developers",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
         "Operating System :: OS Independent",
         "Development Status :: 5 - Production/Stable",
         "Framework :: Pytest"

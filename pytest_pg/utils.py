@@ -12,8 +12,7 @@ class IsReadyFunc(Protocol):
         database: str,
         user: str,
         password: str,
-    ) -> bool:
-        ...
+    ) -> bool: ...
 
 
 def _try_get_is_postgres_ready_based_on_psycopg2() -> Optional[IsReadyFunc]:
