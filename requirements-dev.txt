@@ -7,5 +7,5 @@ wheel==0.45.1
 twine==6.1.0
 docker==7.1.0
 mypy==1.15.0
-urllib3>=1.26.0
+urllib3==2.3.0
 
