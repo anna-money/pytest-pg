@@ -4,9 +4,8 @@ from pathlib import Path
 from setuptools import setup
 
 install_requires = [
-    "docker>=6.1.0",
-    "pytest>=6.0.0",
-    "urllib3>=1.26.0,<3.0.0",
+    "docker>=7.0.0",
+    "pytest>=8.0.0",
 ]
 
 
