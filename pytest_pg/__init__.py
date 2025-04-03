@@ -7,7 +7,7 @@ from .fixtures import PG, pg, pg_11, pg_12, pg_13, pg_14, pg_15, pg_16, run_pg  
 
 __all__: Tuple[str, ...] = ("PG", "run_pg", "pg", "pg_11", "pg_12", "pg_13", "pg_14", "pg_15", "pg_16")
 
-__version__ = "0.0.21"
+__version__ = "0.0.22"
 
 version = f"{__version__}, Python {sys.version}"
 

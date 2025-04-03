@@ -1,3 +1,8 @@
+## v0.0.22 (2025-04-03)
+
+* Override docker host with env variable
+
+
 ## v0.0.17 (2024-04-03)
 
 * Override docker host with env variable
