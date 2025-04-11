@@ -1,3 +1,8 @@
+## v0.0.23 (2025-04-11)
+
+* [Do not pull if we have an image locally](https://github.com/anna-money/pytest-pg/pull/223)
+
+
 ## v0.0.22 (2025-04-03)
 
 * Override docker host with env variable
