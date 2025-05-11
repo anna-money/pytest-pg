@@ -1,3 +1,8 @@
+## v0.0.24 (2025-05-11)
+
+* [Downgrade pytest ](https://github.com/anna-money/pytest-pg/pull/224)
+
+
 ## v0.0.23 (2025-04-11)
 
 * [Do not pull if we have an image locally](https://github.com/anna-money/pytest-pg/pull/223)
