@@ -5,9 +5,8 @@ from setuptools import setup
 
 install_requires = [
     "docker>=7.0.0",
-    "pytest>=8.0.0",
+    "pytest>=7.4",
 ]
-
 
 def read(*parts):
     return Path(__file__).resolve().parent.joinpath(*parts).read_text().strip()

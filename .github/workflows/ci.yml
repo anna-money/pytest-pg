@@ -18,17 +18,21 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        python: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        pytest: ["pytest==7.4.4", "pytest==8.0.2", "pytest==8.1.2", "pytest==8.2.2", "pytest==8.3.5"]
 
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python ${{ matrix.python }}
       uses: actions/setup-python@v3
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: ${{ matrix.python }}
     - name: Install dependencies
       run: |
         make deps
+    - name: Install ${{ matrix.pytest }}
+      run: |
+        pip install "${{ matrix.pytest }}"
     - name: Lint
       run: |
         make lint
