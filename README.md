@@ -10,11 +10,8 @@ To speed up tests, pytest-pg does the following tweaks:
 # How to use?
 
 ```
-import os
-import asyncio
 import asyncpg
 
-import pytest
 
 async def test_asyncpg_query(pg):
     conn = await asyncpg.connect(
