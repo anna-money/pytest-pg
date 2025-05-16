@@ -5,7 +5,7 @@ To speed up tests, pytest-pg does the following tweaks:
 1. synchronous_commit=off
 1. jit=off
 1. bgwriter_lru_maxpages=0
-1. Mounts data directory to a tmpfs 
+1. data directory is mounted to a tmpfs 
 
 # How to use?
 
