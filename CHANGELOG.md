@@ -1,3 +1,8 @@
+## v0.0.25 (2025-05-18)
+
+* Add `pg_17` fixture
+
+
 ## v0.0.24 (2025-05-11)
 
 * [Downgrade pytest ](https://github.com/anna-money/pytest-pg/pull/224)
