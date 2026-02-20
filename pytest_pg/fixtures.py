@@ -53,9 +53,9 @@ def run_pg(image: str, ready_timeout: float = 30.0) -> Generator[PG, None, None]
     try:
         docker_client.start(container=container["Id"])
 
-        started_at = time.time()
+        started_at = time.monotonic()
 
-        while time.time() - started_at < ready_timeout:
+        while time.monotonic() - started_at < ready_timeout:
             if is_pg_ready(
                 host=LOCALHOST,
                 port=unused_port,
