@@ -3,9 +3,21 @@ import re
 import sys
 from typing import Tuple
 
-from .fixtures import PG, pg, pg_11, pg_12, pg_13, pg_14, pg_15, pg_16, pg_17, run_pg  # noqa
+from .fixtures import PG, pg, pg_11, pg_12, pg_13, pg_14, pg_15, pg_16, pg_17, pg_18, run_pg  # noqa
 
-__all__: Tuple[str, ...] = ("PG", "run_pg", "pg", "pg_11", "pg_12", "pg_13", "pg_14", "pg_15", "pg_16", "pg_17")
+__all__: Tuple[str, ...] = (
+    "PG",
+    "run_pg",
+    "pg",
+    "pg_11",
+    "pg_12",
+    "pg_13",
+    "pg_14",
+    "pg_15",
+    "pg_16",
+    "pg_17",
+    "pg_18",
+)
 
 __version__ = "0.0.25"
 
