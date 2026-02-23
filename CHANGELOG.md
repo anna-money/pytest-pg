@@ -1,3 +1,9 @@
+## v0.0.26 (2026-02-23)
+
+* [Time calculation fix](https://github.com/anna-money/pytest-pg/pull/225)
+* [Add `pg_18` fixture](https://github.com/anna-money/pytest-pg/pull/226)
+* [Updated README](https://github.com/anna-money/pytest-pg/pull/227)
+
 ## v0.0.25 (2025-05-18)
 
 * Add `pg_17` fixture
@@ -5,7 +11,7 @@
 
 ## v0.0.24 (2025-05-11)
 
-* [Downgrade pytest ](https://github.com/anna-money/pytest-pg/pull/224)
+* [Downgrade pytest](https://github.com/anna-money/pytest-pg/pull/224)
 
 
 ## v0.0.23 (2025-04-11)
