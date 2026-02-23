@@ -5,7 +5,7 @@ from setuptools import setup
 
 install_requires = [
     "docker>=7.0.0",
-    "pytest>=7.4",
+    "pytest>=8.0",
 ]
 
 def read(*parts):
@@ -41,7 +41,7 @@ setup(
     long_description_content_type="text/markdown",
     platforms=["macOS", "POSIX", "Windows"],
     author="Yury Pliner",
-    python_requires=">=3.9",
+    python_requires=">=3.10",
     project_urls={},
     url="https://github.com/anna-money/pytest-pg",
     author_email="yury.pliner@gmail.com",
@@ -56,11 +56,11 @@ setup(
         "Intended Audience :: Developers",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
         "Operating System :: OS Independent",
         "Development Status :: 5 - Production/Stable",
         "Framework :: Pytest"
