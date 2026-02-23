@@ -2,7 +2,7 @@
 
 * [Time calculation fix](https://github.com/anna-money/pytest-pg/pull/225)
 * [Add `pg_18` fixture](https://github.com/anna-money/pytest-pg/pull/226)
-* [Updated README](https://github.com/anna-money/pytest-pg/pull/227)
+* [Updated README, dropped python 3.9 support, added python 3.14 support](https://github.com/anna-money/pytest-pg/pull/227)
 
 ## v0.0.25 (2025-05-18)
 
