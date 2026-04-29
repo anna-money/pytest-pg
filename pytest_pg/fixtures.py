@@ -1,6 +1,5 @@
 import contextlib
 import dataclasses
-import os
 import time
 import uuid
 from typing import Generator
@@ -9,7 +8,7 @@ import docker
 import docker.errors
 import pytest
 
-from .utils import find_unused_local_port, is_pg_ready
+from .utils import find_unused_local_port, is_pg_ready, resolve_docker_host
 
 LOCALHOST = "127.0.0.1"
 DEFAULT_PG_USER = "postgres"
@@ -28,7 +27,7 @@ class PG:
 
 @contextlib.contextmanager
 def run_pg(image: str, ready_timeout: float = 30.0) -> Generator[PG, None, None]:
-    docker_client = docker.APIClient(base_url=os.getenv("DOCKER_HOST"), version="auto")
+    docker_client = docker.APIClient(base_url=resolve_docker_host(), version="auto")
     try:
         docker_client.inspect_image(image)
     except docker.errors.ImageNotFound:
