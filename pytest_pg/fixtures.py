@@ -2,7 +2,7 @@ import contextlib
 import dataclasses
 import time
 import uuid
-from typing import Generator
+from collections.abc import Generator
 
 import docker
 import docker.errors
