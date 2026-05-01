@@ -3,7 +3,7 @@ import os
 import shutil
 import socket
 import subprocess
-from typing import Any, Optional, Protocol
+from typing import Any, Protocol
 
 
 class IsReadyFunc(Protocol):
@@ -18,7 +18,7 @@ class IsReadyFunc(Protocol):
     ) -> bool: ...
 
 
-def _try_get_is_postgres_ready_based_on_psycopg2() -> Optional[IsReadyFunc]:
+def _try_get_is_postgres_ready_based_on_psycopg2() -> IsReadyFunc | None:
     try:
         # noinspection PyPackageRequirements
         import psycopg2
@@ -35,9 +35,9 @@ def _try_get_is_postgres_ready_based_on_psycopg2() -> Optional[IsReadyFunc]:
         return None
 
 
-def _try_get_is_postgres_ready_based_on_psycopg3() -> Optional[IsReadyFunc]:
+def _try_get_is_postgres_ready_based_on_psycopg3() -> IsReadyFunc | None:
     try:
-        import psycopg
+        import psycopg  # pyright: ignore[reportMissingImports]
 
         def _is_postgres_ready(**params: Any) -> bool:
             try:
@@ -52,10 +52,10 @@ def _try_get_is_postgres_ready_based_on_psycopg3() -> Optional[IsReadyFunc]:
         return None
 
 
-def _try_get_is_postgres_ready_based_on_asyncpg() -> Optional[IsReadyFunc]:
+def _try_get_is_postgres_ready_based_on_asyncpg() -> IsReadyFunc | None:
     try:
         # noinspection PyPackageRequirements
-        import asyncpg
+        import asyncpg  # pyright: ignore[reportMissingImports]
 
         def _is_postgres_ready(**params: Any) -> bool:
             async def _is_postgres_ready_async() -> bool:
@@ -95,7 +95,7 @@ def find_unused_local_port() -> int:
         return s.getsockname()[1]  # type: ignore
 
 
-def resolve_docker_host() -> Optional[str]:
+def resolve_docker_host() -> str | None:
     # The `docker` Python SDK doesn't read `docker context` like the CLI does.
     # Hand DOCKER_HOST to it from the active context so non-default setups
     # (Colima, custom contexts) work without the user exporting it manually.

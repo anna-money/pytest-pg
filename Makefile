@@ -1,32 +1,28 @@
+.PHONY: all uv deps lint test
+
 all: deps lint test
 
-deps:
-	@python3 -m pip install --upgrade pip && pip3 install -r requirements-dev.txt
+UV_EXTRA_ARGS ?=
 
-black:
-	@black --line-length 120 pytest_pg tests
+uv:
+	@which uv >/dev/null 2>&1 || { \
+		echo "uv is not installed"; \
+		exit 1;\
+	}
 
-isort:
-	@isort --line-length 120 --use-parentheses --multi-line 3 --combine-as --trailing-comma pytest_pg tests
+deps: uv
+	@uv sync --all-extras
 
-flake8:
-	@flake8 --max-line-length 120 --ignore C901,C812,E203,E704 --extend-ignore W503 pytest_pg tests
+lint: deps
+ifeq ($(MODE), ci)
+	@uv run $(UV_EXTRA_ARGS) ruff format pytest_pg tests --check
+	@uv run $(UV_EXTRA_ARGS) ruff check pytest_pg tests
+	@uv run $(UV_EXTRA_ARGS) pyright
+else
+	@uv run $(UV_EXTRA_ARGS) ruff format pytest_pg tests
+	@uv run $(UV_EXTRA_ARGS) ruff check pytest_pg tests --fix
+	@uv run $(UV_EXTRA_ARGS) pyright
+endif
 
-mypy:
-	@mypy --strict --ignore-missing-imports pytest_pg tests
-
-lint: black isort flake8 mypy
-
-test:
-	@python3 -m pytest -vv --rootdir tests .
-
-pyenv:
-	echo pytest_pg > .python-version && pyenv install -s 3.13 && pyenv virtualenv -f 3.13 pytest_pg
-
-pyenv-delete:
-	pyenv virtualenv-delete -f pytest_pg
-
-
-dists:
-	python setup.py sdist bdist_wheel
-	twine check dist/*
+test: deps
+	@uv run $(UV_EXTRA_ARGS) pytest -vv --rootdir tests .

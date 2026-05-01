@@ -1,0 +1,80 @@
+[project]
+name = "pytest_pg"
+dynamic = ["version"]
+description = "A tiny plugin for pytest which runs PostgreSQL in Docker"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [{name = "Yury Pliner", email = "yury.pliner@gmail.com"}]
+requires-python = ">=3.10"
+dependencies = [
+    "docker>=7.0.0",
+    "pytest>=8.0",
+]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Operating System :: OS Independent",
+    "Development Status :: 5 - Production/Stable",
+    "Framework :: Pytest",
+]
+
+[project.urls]
+Homepage = "https://github.com/anna-money/pytest-pg"
+
+[project.entry-points.pytest11]
+pytest_pg = "pytest_pg"
+
+[project.optional-dependencies]
+dev = [
+    "pytest==9.0.2",
+    "ruff==0.14.10",
+    "pyright==1.1.407",
+]
+
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.targets.wheel]
+packages = ["pytest_pg"]
+
+[tool.pytest.ini_options]
+norecursedirs = [".git", ".venv"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["SIM", "C4", "ANN", "N", "LOG", "G", "F", "E", "W", "Q", "I", "UP", "T20", "COM", "RSE", "RET", "ISC", "ASYNC", "SLOT", "RUF", "DTZ"]
+ignore = ["COM812", "ISC001", "ASYNC109", "RUF018", "RUF022", "ANN401", "ANN204", "E501"]
+
+[tool.pyright]
+include = ["pytest_pg", "tests"]
+pythonVersion = "3.10"
+pythonPlatform = "All"
+stubPath = ""
+typeCheckingMode = "strict"
+useLibraryCodeForTypes = true
+reportPrivateImportUsage = false
+reportMissingTypeStubs = false
+reportUnknownVariableType = false
+reportUnknownMemberType = false
+reportUnknownLambdaType = false
+reportUnknownArgumentType = false
+reportUnknownParameterType = false
+reportUntypedFunctionDecorator = false
+reportUnusedImport = false
+reportMissingTypeArgument = false
+reportImportCycles = false
+reportDeprecated = false
