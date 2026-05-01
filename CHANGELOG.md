@@ -1,3 +1,8 @@
+## v0.0.27 (2026-05-01)
+
+* [Resolve DOCKER_HOST from docker context](https://github.com/anna-money/pytest-pg/pull/228)
+
+
 ## v0.0.26 (2026-02-23)
 
 * [Time calculation fix](https://github.com/anna-money/pytest-pg/pull/225)

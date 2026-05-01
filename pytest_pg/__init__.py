@@ -19,7 +19,7 @@ __all__: Tuple[str, ...] = (
     "pg_18",
 )
 
-__version__ = "0.0.26"
+__version__ = "0.0.27"
 
 version = f"{__version__}, Python {sys.version}"
 
