@@ -25,7 +25,7 @@ def _try_get_is_postgres_ready_based_on_psycopg2() -> IsReadyFunc | None:
 
         def _is_postgres_ready(**params: Any) -> bool:
             try:
-                with psycopg2.connect(**params):
+                with psycopg2.connect(**params, connect_timeout=5):
                     return True
             except psycopg2.OperationalError:
                 return False
@@ -42,7 +42,7 @@ def _try_get_is_postgres_ready_based_on_psycopg3() -> IsReadyFunc | None:
         def _is_postgres_ready(**params: Any) -> bool:
             try:
                 params.pop("database")
-                with psycopg.connect(**params):
+                with psycopg.connect(**params, connect_timeout=5):
                     return True
             except psycopg.OperationalError:
                 return False
@@ -60,7 +60,7 @@ def _try_get_is_postgres_ready_based_on_asyncpg() -> IsReadyFunc | None:
         def _is_postgres_ready(**params: Any) -> bool:
             async def _is_postgres_ready_async() -> bool:
                 try:
-                    connection = await asyncpg.connect(**params)
+                    connection = await asyncpg.connect(**params, timeout=5.0)
                     await connection.close()
                     return True
                 except (asyncpg.exceptions.PostgresError, OSError):

@@ -1,3 +1,8 @@
+## v0.0.28 (2026-05-06)
+
+* [Reduce PostgreSQL container startup time](https://github.com/anna-money/pytest-pg/pull/230)
+
+
 ## v0.0.27 (2026-05-01)
 
 * [Resolve DOCKER_HOST from docker context](https://github.com/anna-money/pytest-pg/pull/228)

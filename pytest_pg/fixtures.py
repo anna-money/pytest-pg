@@ -45,7 +45,11 @@ def run_pg(image: str, ready_timeout: float = 30.0) -> Generator[PG, None, None]
         host_config=docker_client.create_host_config(
             port_bindings={5432: (LOCALHOST, unused_port)}, tmpfs=[postgresql_data_path]
         ),
-        environment={"POSTGRES_HOST_AUTH_METHOD": "trust", "PGDATA": postgresql_data_path},
+        environment={
+            "POSTGRES_HOST_AUTH_METHOD": "trust",
+            "PGDATA": postgresql_data_path,
+            "POSTGRES_INITDB_ARGS": "--no-sync",
+        },
         command="-c fsync=off -c full_page_writes=off -c synchronous_commit=off -c bgwriter_lru_maxpages=0 -c jit=off",
     )
 
@@ -64,7 +68,7 @@ def run_pg(image: str, ready_timeout: float = 30.0) -> Generator[PG, None, None]
             ):
                 break
 
-            time.sleep(0.5)
+            time.sleep(0.05)
         else:
             container_logs = docker_client.logs(container["Id"]).decode()
             pytest.fail(f"Failed to start postgres using {image} in {ready_timeout} seconds: {container_logs}")
