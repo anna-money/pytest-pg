@@ -34,7 +34,7 @@ pytest_pg = "pytest_pg"
 [project.optional-dependencies]
 dev = [
     "pytest==9.0.2",
-    "ruff==0.14.10",
+    "ruff==0.15.13",
     "pyright==1.1.407",
 ]
 
