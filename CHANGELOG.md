@@ -1,4 +1,4 @@
-## Unreleased
+## v0.0.29 (2026-06-02)
 
 * Configurable base image via the `pg_docker_image_name` ini option (set in `pyproject.toml`)
 * Removed `pg_11`, `pg_12`, `pg_13` fixtures — PostgreSQL 11/12/13 are end-of-life
