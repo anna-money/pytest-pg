@@ -2,7 +2,7 @@ import subprocess
 from typing import Any
 from unittest import mock
 
-from pytest_pg.utils import resolve_docker_host
+from pytest_pg.utils import resolve_docker_host, resolve_image
 
 
 def test_resolve_docker_host_returns_env_when_set(monkeypatch: Any) -> None:
@@ -58,3 +58,11 @@ def test_resolve_docker_host_returns_none_on_timeout(monkeypatch: Any) -> None:
         mock.patch("pytest_pg.utils.subprocess.run", side_effect=err),
     ):
         assert resolve_docker_host() is None
+
+
+def test_resolve_image_uses_default_base() -> None:
+    assert resolve_image("postgres", "14") == "postgres:14"
+
+
+def test_resolve_image_uses_configured_base() -> None:
+    assert resolve_image("eu.gcr.io/anna-money/postgres", "14") == "eu.gcr.io/anna-money/postgres:14"

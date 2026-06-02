@@ -1,3 +1,9 @@
+## Unreleased
+
+* Configurable base image via the `pg_docker_image_name` ini option (set in `pyproject.toml`)
+* Removed `pg_11`, `pg_12`, `pg_13` fixtures — PostgreSQL 11/12/13 are end-of-life
+
+
 ## v0.0.28 (2026-05-06)
 
 * [Reduce PostgreSQL container startup time](https://github.com/anna-money/pytest-pg/pull/230)
