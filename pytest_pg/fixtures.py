@@ -8,7 +8,7 @@ import docker
 import docker.errors
 import pytest
 
-from .utils import find_unused_local_port, is_pg_ready, resolve_docker_host
+from .utils import find_unused_local_port, is_pg_ready, resolve_docker_host, resolve_image
 
 LOCALHOST = "127.0.0.1"
 DEFAULT_PG_USER = "postgres"
@@ -86,54 +86,36 @@ def run_pg(image: str, ready_timeout: float = 30.0) -> Generator[PG, None, None]
 
 
 @pytest.fixture(scope="session")
-def pg() -> Generator[PG, None, None]:
-    with run_pg("postgres:latest") as pg:
+def pg(pytestconfig: pytest.Config) -> Generator[PG, None, None]:
+    with run_pg(resolve_image(str(pytestconfig.getini("pg_docker_image_name")), "latest")) as pg:
         yield pg
 
 
 @pytest.fixture(scope="session")
-def pg_11() -> Generator[PG, None, None]:
-    with run_pg("postgres:11") as pg:
+def pg_14(pytestconfig: pytest.Config) -> Generator[PG, None, None]:
+    with run_pg(resolve_image(str(pytestconfig.getini("pg_docker_image_name")), "14")) as pg:
         yield pg
 
 
 @pytest.fixture(scope="session")
-def pg_12() -> Generator[PG, None, None]:
-    with run_pg("postgres:12") as pg:
+def pg_15(pytestconfig: pytest.Config) -> Generator[PG, None, None]:
+    with run_pg(resolve_image(str(pytestconfig.getini("pg_docker_image_name")), "15")) as pg:
         yield pg
 
 
 @pytest.fixture(scope="session")
-def pg_13() -> Generator[PG, None, None]:
-    with run_pg("postgres:13") as pg:
+def pg_16(pytestconfig: pytest.Config) -> Generator[PG, None, None]:
+    with run_pg(resolve_image(str(pytestconfig.getini("pg_docker_image_name")), "16")) as pg:
         yield pg
 
 
 @pytest.fixture(scope="session")
-def pg_14() -> Generator[PG, None, None]:
-    with run_pg("postgres:14") as pg:
+def pg_17(pytestconfig: pytest.Config) -> Generator[PG, None, None]:
+    with run_pg(resolve_image(str(pytestconfig.getini("pg_docker_image_name")), "17")) as pg:
         yield pg
 
 
 @pytest.fixture(scope="session")
-def pg_15() -> Generator[PG, None, None]:
-    with run_pg("postgres:15") as pg:
-        yield pg
-
-
-@pytest.fixture(scope="session")
-def pg_16() -> Generator[PG, None, None]:
-    with run_pg("postgres:16") as pg:
-        yield pg
-
-
-@pytest.fixture(scope="session")
-def pg_17() -> Generator[PG, None, None]:
-    with run_pg("postgres:17") as pg:
-        yield pg
-
-
-@pytest.fixture(scope="session")
-def pg_18() -> Generator[PG, None, None]:
-    with run_pg("postgres:18") as pg:
+def pg_18(pytestconfig: pytest.Config) -> Generator[PG, None, None]:
+    with run_pg(resolve_image(str(pytestconfig.getini("pg_docker_image_name")), "18")) as pg:
         yield pg

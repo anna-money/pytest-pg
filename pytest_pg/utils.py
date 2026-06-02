@@ -116,3 +116,7 @@ def resolve_docker_host() -> str | None:
     except (OSError, subprocess.SubprocessError):
         return None
     return result.stdout.strip() or None
+
+
+def resolve_image(name: str, version: str) -> str:
+    return f"{name}:{version}"

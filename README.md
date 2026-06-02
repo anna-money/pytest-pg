@@ -3,7 +3,7 @@
 A pytest plugin that provides session-scoped fixtures for running PostgreSQL inside Docker containers.
 It automatically spins up a container, waits for PostgreSQL to become ready, exposes connection details
 (`host`, `port`, `user`, `password`, `database`) via a `PG` dataclass, and tears the container down after
-the test session. Pre-built fixtures are available for PostgreSQL versions 11 through 18 as well as `latest`.
+the test session. Pre-built fixtures are available for PostgreSQL versions 14 through 18 as well as `latest`.
 
 Readiness checks work with any of the common drivers — asyncpg, psycopg2, or psycopg3.
 
@@ -22,9 +22,6 @@ To speed up tests, pytest-pg does the following tweaks:
 You can use the following fixtures:
 
 * `pg` – the latest PostgreSQL image available
-* `pg_11` – PostgreSQL 11
-* `pg_12` – PostgreSQL 12
-* `pg_13` – PostgreSQL 13
 * `pg_14` – PostgreSQL 14
 * `pg_15` – PostgreSQL 15
 * `pg_16` – PostgreSQL 16
@@ -84,4 +81,18 @@ def postgres_env_vars(pg_18: pytest_pg.PG) -> Generator[None]:
     os.environ['POSTGRES_PORT'] = str(pg_18.port)
     os.environ['POSTGRES_DBNAME'] = pg_18.database
     yield
+```
+
+
+# Using a custom registry
+
+By default the built-in fixtures pull `postgres:<version>` from Docker Hub. To pull from a mirror
+instead (for example, to avoid Docker Hub rate limits), set the base image in `pyproject.toml`. The
+fixtures append the version tag to it, so the mirror must carry the matching tags: `<base>:14` …
+`<base>:18` for the versioned fixtures, and `<base>:latest` for the `pg` fixture. Mirrors of pinned
+versions often omit `latest`; if yours does, use a versioned `pg_NN` fixture instead of `pg`.
+
+```toml
+[tool.pytest.ini_options]
+pg_docker_image_name = "eu.gcr.io/anna-money/postgres"
 ```

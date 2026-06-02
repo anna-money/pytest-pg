@@ -1,14 +1,13 @@
 from importlib.metadata import version as _get_version
 
-from .fixtures import PG, pg, pg_11, pg_12, pg_13, pg_14, pg_15, pg_16, pg_17, pg_18, run_pg
+import pytest
+
+from .fixtures import PG, pg, pg_14, pg_15, pg_16, pg_17, pg_18, run_pg
 
 __all__: tuple[str, ...] = (
     "PG",
     "run_pg",
     "pg",
-    "pg_11",
-    "pg_12",
-    "pg_13",
     "pg_14",
     "pg_15",
     "pg_16",
@@ -17,3 +16,11 @@ __all__: tuple[str, ...] = (
 )
 
 __version__ = _get_version("pytest_pg")
+
+
+def pytest_addoption(parser: pytest.Parser) -> None:
+    parser.addini(
+        "pg_docker_image_name",
+        help="Base PostgreSQL image (registry and name, without tag); the version tag is appended.",
+        default="postgres",
+    )
