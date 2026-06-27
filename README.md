@@ -84,6 +84,51 @@ def postgres_env_vars(pg_18: pytest_pg.PG) -> Generator[None]:
 ```
 
 
+# Reusable container mode
+
+By default each test session spins up a fresh container and removes it at the end (`ephemeral` mode). Set
+`pg_mode = "reusable"` to instead keep a **long-living** container alive across runs and allocate a **fresh
+database per session** (one per xdist worker) inside it. Container startup is then paid once; subsequent runs
+only pay a near-instant `CREATE DATABASE`.
+
+```toml
+[tool.pytest.ini_options]
+pg_mode = "reusable"
+```
+
+Or per run, without committing it:
+
+```
+pytest -o pg_mode=reusable
+```
+
+In reusable mode:
+
+* the container is named `pytest-pg-reuse-<version>-<hash>` and is **never** torn down — later runs reuse it
+  (remove it with `docker rm -f pytest-pg-reuse-*` to reclaim it or to pick up a newer image of the same tag);
+* every fixture (`pg`, `pg_14` … `pg_18`) yields a connection to its own freshly-created database, dropped at
+  the end of the session;
+* under `pytest -n` (xdist) all workers share one container, each with its own database;
+* leftover databases from previous runs are dropped once they are older than `pg_database_max_age_days`
+  (default `2`), which bounds the memory used by the long-living container.
+
+```toml
+[tool.pytest.ini_options]
+pg_mode = "reusable"
+pg_database_max_age_days = 2
+```
+
+The `run_reusable_pg` context manager is the building block behind these fixtures, mirroring `run_pg`:
+
+```python
+import pytest_pg
+
+
+with pytest_pg.run_reusable_pg("postgres:18") as pg:
+    ...
+```
+
+
 # Using a custom registry
 
 By default the built-in fixtures pull `postgres:<version>` from Docker Hub. To pull from a mirror
