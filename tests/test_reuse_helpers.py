@@ -105,14 +105,14 @@ def test_resolve_pg_mode_invalid() -> None:
 
 
 def test_resolve_database_max_age_days_valid() -> None:
-    assert _resolve_database_max_age_days(_stub_config({"pg_database_max_age_days": "2"})) == 2.0
-    assert _resolve_database_max_age_days(_stub_config({"pg_database_max_age_days": "0.5"})) == 0.5
+    assert _resolve_database_max_age_days(_stub_config({"pg_reusable_db_max_age_days": "2"})) == 2.0
+    assert _resolve_database_max_age_days(_stub_config({"pg_reusable_db_max_age_days": "0.5"})) == 0.5
 
 
 @pytest.mark.parametrize("value", ["soon", "0", "-1", "nan", "inf"])
 def test_resolve_database_max_age_days_invalid(value: str) -> None:
     with pytest.raises(pytest.UsageError):
-        _resolve_database_max_age_days(_stub_config({"pg_database_max_age_days": value}))
+        _resolve_database_max_age_days(_stub_config({"pg_reusable_db_max_age_days": value}))
 
 
 def _stub_client(containers: list[dict[str, Any]]) -> Any:

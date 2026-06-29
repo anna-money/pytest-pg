@@ -32,7 +32,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         default="ephemeral",
     )
     parser.addini(
-        "pg_database_max_age_days",
+        "pg_reusable_db_max_age_days",
         help="Reusable mode only: at session start, drop leftover pytest databases older than this many days (default 2).",
         default="2",
     )

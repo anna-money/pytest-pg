@@ -286,13 +286,13 @@ def _resolve_pg_mode(pytestconfig: pytest.Config) -> PgMode:
 
 
 def _resolve_database_max_age_days(pytestconfig: pytest.Config) -> float:
-    value = str(pytestconfig.getini("pg_database_max_age_days"))
+    value = str(pytestconfig.getini("pg_reusable_db_max_age_days"))
     try:
         days = float(value)
     except ValueError:
-        raise pytest.UsageError(f"Invalid pg_database_max_age_days {value!r}; expected a number of days") from None
+        raise pytest.UsageError(f"Invalid pg_reusable_db_max_age_days {value!r}; expected a number of days") from None
     if not math.isfinite(days) or days <= 0:
-        raise pytest.UsageError(f"Invalid pg_database_max_age_days {value!r}; expected a positive number of days")
+        raise pytest.UsageError(f"Invalid pg_reusable_db_max_age_days {value!r}; expected a positive number of days")
     return days
 
 

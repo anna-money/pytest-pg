@@ -1,7 +1,7 @@
 ## v0.0.30 (2026-06-27)
 
 * Add a `reusable` container mode via the `pg_mode` ini option: keep a long-living PostgreSQL container across runs and allocate a fresh database per xdist worker, instead of a throwaway container per session (`ephemeral`, the default, is unchanged)
-* Add the `pg_database_max_age_days` ini option (default 2): in reusable mode, drop leftover databases older than this at session start
+* Add the `pg_reusable_db_max_age_days` ini option (default 2): in reusable mode, drop leftover databases older than this at session start
 * Expose the `run_reusable_pg` context manager and the `PgMode` enum
 
 
