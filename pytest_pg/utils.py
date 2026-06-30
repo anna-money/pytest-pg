@@ -95,6 +95,14 @@ def find_unused_local_port() -> int:
         return s.getsockname()[1]  # type: ignore
 
 
+def is_local_port_open(host: str, port: int) -> bool:
+    try:
+        with socket.create_connection((host, port), timeout=0.5):
+            return True
+    except OSError:
+        return False
+
+
 def resolve_docker_host() -> str | None:
     # The `docker` Python SDK doesn't read `docker context` like the CLI does.
     # Hand DOCKER_HOST to it from the active context so non-default setups

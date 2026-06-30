@@ -1,8 +1,9 @@
+import socket
 import subprocess
 from typing import Any
 from unittest import mock
 
-from pytest_pg.utils import resolve_docker_host, resolve_image
+from pytest_pg.utils import find_unused_local_port, is_local_port_open, resolve_docker_host, resolve_image
 
 
 def test_resolve_docker_host_returns_env_when_set(monkeypatch: Any) -> None:
@@ -66,3 +67,14 @@ def test_resolve_image_uses_default_base() -> None:
 
 def test_resolve_image_uses_configured_base() -> None:
     assert resolve_image("eu.gcr.io/anna-money/postgres", "14") == "eu.gcr.io/anna-money/postgres:14"
+
+
+def test_is_local_port_open_true_for_listening_socket() -> None:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
+        server.bind(("127.0.0.1", 0))
+        server.listen(1)
+        assert is_local_port_open("127.0.0.1", server.getsockname()[1]) is True
+
+
+def test_is_local_port_open_false_for_unbound_port() -> None:
+    assert is_local_port_open("127.0.0.1", find_unused_local_port()) is False
