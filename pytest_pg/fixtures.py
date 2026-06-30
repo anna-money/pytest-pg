@@ -13,7 +13,7 @@ import docker
 import docker.errors
 import pytest
 
-from .utils import find_unused_local_port, is_pg_ready, resolve_docker_host, resolve_image
+from .utils import find_unused_local_port, is_local_port_open, is_pg_ready, resolve_docker_host, resolve_image
 
 LOCALHOST = "127.0.0.1"
 DEFAULT_PG_USER = "postgres"
@@ -32,6 +32,7 @@ PG_COMMAND = "-c fsync=off -c full_page_writes=off -c synchronous_commit=off -c 
 REUSE_NAME_PREFIX = "pytest-pg-reuse-"
 DATABASE_NAME_PREFIX = "pytest_"
 DEFAULT_DATABASE_MAX_AGE_DAYS = 2.0
+REAP_SAFETY_FLOOR = datetime.timedelta(hours=1)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -128,11 +129,15 @@ def run_pg(image: str, ready_timeout: float = 30.0) -> Generator[PG, None, None]
         docker_client.remove_container(container_id, v=True)
 
 
+def _image_tag(image: str) -> str:
+    repository = image.rsplit("/", 1)[-1]
+    return repository.rsplit(":", 1)[-1] if ":" in repository else "latest"
+
+
 def _reuse_container_name(image: str, command: str, environment: dict[str, str]) -> str:
-    version = image.rsplit(":", 1)[-1]
     spec = "\n".join([image, command, *(f"{key}={environment[key]}" for key in sorted(environment))])
     spec_hash = hashlib.blake2b(spec.encode(), digest_size=6).hexdigest()
-    return f"{REUSE_NAME_PREFIX}{version}-{spec_hash}"
+    return f"{REUSE_NAME_PREFIX}{_image_tag(image)}-{spec_hash}"
 
 
 def _worker_database_name(worker_id: str) -> str:
@@ -164,8 +169,9 @@ def _docker_exec(docker_client: docker.APIClient, container: str, command: list[
     return (stdout or b"").decode()
 
 
-def _drop_database(docker_client: docker.APIClient, container: str, database: str) -> None:
-    _docker_exec(docker_client, container, ["dropdb", "--force", "--if-exists", "-U", DEFAULT_PG_USER, database])
+def _drop_database(docker_client: docker.APIClient, container: str, database: str, *, force: bool = False) -> None:
+    flags = ["--force"] if force else []
+    _docker_exec(docker_client, container, ["dropdb", *flags, "--if-exists", "-U", DEFAULT_PG_USER, database])
 
 
 def _is_pg_ready_in_container(docker_client: docker.APIClient, container: str) -> bool:
@@ -177,8 +183,7 @@ def _is_pg_ready_in_container(docker_client: docker.APIClient, container: str) -
 
 
 def _reap_stale_reuse_databases(docker_client: docker.APIClient, container: str, max_age: datetime.timedelta) -> None:
-    if max_age.total_seconds() <= 0:
-        return
+    effective_max_age = max(max_age, REAP_SAFETY_FLOOR)
     try:
         listing = _docker_exec(
             docker_client,
@@ -197,7 +202,7 @@ def _reap_stale_reuse_databases(docker_client: docker.APIClient, container: str,
     now = datetime.datetime.now(datetime.timezone.utc).timestamp()
     for database in listing.split():
         created = _parse_database_timestamp(database)
-        if created is None or not _is_stale(created.timestamp(), now, max_age):
+        if created is None or not _is_stale(created.timestamp(), now, effective_max_age):
             continue
         with contextlib.suppress(RuntimeError, docker.errors.APIError):
             _drop_database(docker_client, container, database)
@@ -213,7 +218,7 @@ def _ensure_reuse_container(docker_client: docker.APIClient, image: str, name: s
         None,
     )
     if match is not None:
-        if match["State"] not in {"exited", "dead"}:
+        if match["State"] == "running":
             return
         try:
             docker_client.remove_container(match["Id"], v=True, force=True)
@@ -235,14 +240,20 @@ def _ensure_running_reuse_container(
     last_error: Exception = RuntimeError(f"could not obtain a running reusable container {name}")
     for _ in range(2):
         _ensure_reuse_container(docker_client, image, name)
-        _wait_until_ready(
-            docker_client, name, image, ready_timeout, lambda: _is_pg_ready_in_container(docker_client, name)
-        )
         try:
             ports = docker_client.inspect_container(name)["NetworkSettings"]["Ports"]
-            return int(ports[f"{PG_PORT}/tcp"][0]["HostPort"])
+            host_port = int(ports[f"{PG_PORT}/tcp"][0]["HostPort"])
         except docker.errors.NotFound as error:
             last_error = error
+            continue
+        _wait_until_ready(
+            docker_client,
+            name,
+            image,
+            ready_timeout,
+            lambda: _is_pg_ready_in_container(docker_client, name) and is_local_port_open(LOCALHOST, host_port),
+        )
+        return host_port
     raise last_error
 
 
@@ -272,7 +283,7 @@ def run_reusable_pg(
         )
     finally:
         with contextlib.suppress(RuntimeError, docker.errors.APIError):
-            _drop_database(docker_client, name, database)
+            _drop_database(docker_client, name, database, force=True)
 
 
 def _resolve_pg_mode(pytestconfig: pytest.Config) -> PgMode:

@@ -12,7 +12,9 @@ from pytest_pg.fixtures import (
     PG_COMMAND,
     PG_ENVIRONMENT,
     PgMode,
+    _drop_database,
     _ensure_reuse_container,
+    _image_tag,
     _is_stale,
     _parse_database_timestamp,
     _resolve_database_max_age_days,
@@ -49,6 +51,25 @@ def test_reuse_container_name_differs_by_environment() -> None:
     assert _reuse_container_name("postgres:16", PG_COMMAND, PG_ENVIRONMENT) != _reuse_container_name(
         "postgres:16", PG_COMMAND, {**PG_ENVIRONMENT, "PGDATA": "/other"}
     )
+
+
+def test_reuse_container_name_is_valid_for_registry_port_image() -> None:
+    name = _reuse_container_name("myregistry:5000/postgres", PG_COMMAND, PG_ENVIRONMENT)
+    assert re.fullmatch(r"pytest-pg-reuse-latest-[0-9a-f]{12}", name)
+
+
+@pytest.mark.parametrize(
+    ("image", "expected"),
+    [
+        ("postgres", "latest"),
+        ("postgres:16", "16"),
+        ("myregistry:5000/postgres", "latest"),
+        ("myregistry:5000/postgres:16", "16"),
+        ("ns/repo:18", "18"),
+    ],
+)
+def test_image_tag(image: str, expected: str) -> None:
+    assert _image_tag(image) == expected
 
 
 def test_worker_database_name_format() -> None:
@@ -143,8 +164,9 @@ def test_ensure_reuse_container_creates_when_absent() -> None:
     create.assert_called_once_with(client, "postgres:16", "the-name", 5555)
 
 
-def test_ensure_reuse_container_recreates_when_exited() -> None:
-    client = _stub_client([{"Names": ["/the-name"], "State": "exited", "Id": "id1"}])
+@pytest.mark.parametrize("state", ["created", "restarting", "paused", "exited", "dead"])
+def test_ensure_reuse_container_recreates_non_running(state: str) -> None:
+    client = _stub_client([{"Names": ["/the-name"], "State": state, "Id": "id1"}])
     with (
         mock.patch("pytest_pg.fixtures._create_pg_container") as create,
         mock.patch("pytest_pg.fixtures.find_unused_local_port", return_value=5555),
@@ -152,14 +174,6 @@ def test_ensure_reuse_container_recreates_when_exited() -> None:
         _ensure_reuse_container(client, "postgres:16", "the-name")
     client.remove_container.assert_called_once()
     create.assert_called_once()
-
-
-def test_ensure_reuse_container_leaves_transient_state() -> None:
-    client = _stub_client([{"Names": ["/the-name"], "State": "created", "Id": "id1"}])
-    with mock.patch("pytest_pg.fixtures._create_pg_container") as create:
-        _ensure_reuse_container(client, "postgres:16", "the-name")
-    create.assert_not_called()
-    client.remove_container.assert_not_called()
 
 
 def test_ensure_reuse_container_swallows_create_conflict() -> None:
@@ -179,3 +193,15 @@ def test_ensure_reuse_container_reraises_other_create_errors() -> None:
         pytest.raises(docker.errors.APIError),
     ):
         _ensure_reuse_container(client, "postgres:16", "the-name")
+
+
+def test_drop_database_omits_force_by_default() -> None:
+    with mock.patch("pytest_pg.fixtures._docker_exec") as docker_exec:
+        _drop_database(mock.MagicMock(), "the-name", "db")
+    assert "--force" not in docker_exec.call_args.args[2]
+
+
+def test_drop_database_includes_force_when_requested() -> None:
+    with mock.patch("pytest_pg.fixtures._docker_exec") as docker_exec:
+        _drop_database(mock.MagicMock(), "the-name", "db", force=True)
+    assert "--force" in docker_exec.call_args.args[2]

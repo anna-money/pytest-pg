@@ -20,7 +20,7 @@ from pytest_pg.fixtures import (
     _reap_stale_reuse_databases,
     _reuse_container_name,
 )
-from pytest_pg.utils import find_unused_local_port, resolve_docker_host
+from pytest_pg.utils import find_unused_local_port, is_local_port_open, resolve_docker_host
 
 IMAGE = "postgres:16"
 REUSE_CONTAINER_NAME = _reuse_container_name(IMAGE, PG_COMMAND, PG_ENVIRONMENT)
@@ -46,6 +46,7 @@ def test_reusable_pg_persists_container_and_drops_database(docker_client: Any) -
     with pytest_pg.run_reusable_pg(IMAGE) as pg:
         assert pg.database.startswith("pytest_master_")
         assert pg.database in _database_names(docker_client, REUSE_CONTAINER_NAME)
+        assert is_local_port_open(pg.host, pg.port)
         database = pg.database
 
     assert docker_client.inspect_container(REUSE_CONTAINER_NAME)["State"]["Running"] is True
@@ -77,6 +78,17 @@ def test_reap_drops_only_stale_pytest_databases(docker_client: Any) -> None:
     assert stale not in databases
     assert fresh in databases
     assert "keep_me" in databases
+
+
+def test_reap_keeps_recent_databases_under_safety_floor(docker_client: Any) -> None:
+    _ensure_running_reuse_container(docker_client, IMAGE, REUSE_CONTAINER_NAME, 30.0)
+    recent = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(minutes=5)).strftime("%Y%m%d%H%M%S")
+    database = f"pytest_gw9_{recent}_cafebabe"
+    _docker_exec(docker_client, REUSE_CONTAINER_NAME, ["createdb", "-U", "postgres", database])
+
+    _reap_stale_reuse_databases(docker_client, REUSE_CONTAINER_NAME, datetime.timedelta(seconds=1))
+
+    assert database in _database_names(docker_client, REUSE_CONTAINER_NAME)
 
 
 def test_ensure_running_recreates_a_stopped_container(docker_client: Any) -> None:
