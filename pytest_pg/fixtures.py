@@ -218,7 +218,7 @@ def _ensure_reuse_container(docker_client: docker.APIClient, image: str, name: s
         None,
     )
     if match is not None:
-        if match["State"] == "running":
+        if match["State"] not in {"exited", "dead"}:
             return
         try:
             docker_client.remove_container(match["Id"], v=True, force=True)
@@ -234,27 +234,37 @@ def _ensure_reuse_container(docker_client: docker.APIClient, image: str, name: s
             raise
 
 
+def _resolve_ready_host_port(docker_client: docker.APIClient, name: str, ready_timeout: float) -> int | None:
+    started_at = time.monotonic()
+    while time.monotonic() - started_at < ready_timeout:
+        try:
+            binding = docker_client.inspect_container(name)["NetworkSettings"]["Ports"].get(f"{PG_PORT}/tcp")
+        except docker.errors.NotFound:
+            binding = None
+        if binding:
+            host_port = int(binding[0]["HostPort"])
+            if _is_pg_ready_in_container(docker_client, name) and is_local_port_open(LOCALHOST, host_port):
+                return host_port
+        time.sleep(0.05)
+    return None
+
+
 def _ensure_running_reuse_container(
     docker_client: docker.APIClient, image: str, name: str, ready_timeout: float
 ) -> int:
-    last_error: Exception = RuntimeError(f"could not obtain a running reusable container {name}")
-    for _ in range(2):
+    for attempt in range(2):
         _ensure_reuse_container(docker_client, image, name)
-        try:
-            ports = docker_client.inspect_container(name)["NetworkSettings"]["Ports"]
-            host_port = int(ports[f"{PG_PORT}/tcp"][0]["HostPort"])
-        except docker.errors.NotFound as error:
-            last_error = error
-            continue
-        _wait_until_ready(
-            docker_client,
-            name,
-            image,
-            ready_timeout,
-            lambda: _is_pg_ready_in_container(docker_client, name) and is_local_port_open(LOCALHOST, host_port),
-        )
-        return host_port
-    raise last_error
+        host_port = _resolve_ready_host_port(docker_client, name, ready_timeout)
+        if host_port is not None:
+            return host_port
+        if attempt == 0:
+            with contextlib.suppress(docker.errors.APIError):
+                docker_client.remove_container(name, v=True, force=True)
+    try:
+        container_logs = docker_client.logs(name).decode()
+    except docker.errors.APIError:
+        container_logs = "<container logs unavailable>"
+    pytest.fail(f"Failed to start postgres using {image} in {ready_timeout} seconds: {container_logs}")
 
 
 @contextlib.contextmanager

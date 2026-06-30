@@ -14,6 +14,7 @@ from pytest_pg.fixtures import (
     PgMode,
     _drop_database,
     _ensure_reuse_container,
+    _ensure_running_reuse_container,
     _image_tag,
     _is_stale,
     _parse_database_timestamp,
@@ -164,8 +165,8 @@ def test_ensure_reuse_container_creates_when_absent() -> None:
     create.assert_called_once_with(client, "postgres:16", "the-name", 5555)
 
 
-@pytest.mark.parametrize("state", ["created", "restarting", "paused", "exited", "dead"])
-def test_ensure_reuse_container_recreates_non_running(state: str) -> None:
+@pytest.mark.parametrize("state", ["exited", "dead"])
+def test_ensure_reuse_container_recreates_terminal(state: str) -> None:
     client = _stub_client([{"Names": ["/the-name"], "State": state, "Id": "id1"}])
     with (
         mock.patch("pytest_pg.fixtures._create_pg_container") as create,
@@ -174,6 +175,25 @@ def test_ensure_reuse_container_recreates_non_running(state: str) -> None:
         _ensure_reuse_container(client, "postgres:16", "the-name")
     client.remove_container.assert_called_once()
     create.assert_called_once()
+
+
+@pytest.mark.parametrize("state", ["created", "restarting", "paused"])
+def test_ensure_reuse_container_leaves_transient_state(state: str) -> None:
+    client = _stub_client([{"Names": ["/the-name"], "State": state, "Id": "id1"}])
+    with mock.patch("pytest_pg.fixtures._create_pg_container") as create:
+        _ensure_reuse_container(client, "postgres:16", "the-name")
+    create.assert_not_called()
+    client.remove_container.assert_not_called()
+
+
+def test_ensure_running_reuse_container_recreates_after_timeout() -> None:
+    client = mock.MagicMock()
+    with (
+        mock.patch("pytest_pg.fixtures._ensure_reuse_container"),
+        mock.patch("pytest_pg.fixtures._resolve_ready_host_port", side_effect=[None, 5432]),
+    ):
+        assert _ensure_running_reuse_container(client, "postgres:16", "the-name", 0.1) == 5432
+    client.remove_container.assert_called_once()
 
 
 def test_ensure_reuse_container_swallows_create_conflict() -> None:
