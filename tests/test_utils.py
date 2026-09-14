@@ -2,7 +2,9 @@ import subprocess
 from typing import Any
 from unittest import mock
 
-from pytest_pg.utils import resolve_docker_host, resolve_image
+import pytest
+
+from pytest_pg.utils import published_port, resolve_docker_host, resolve_image
 
 
 def test_resolve_docker_host_returns_env_when_set(monkeypatch: Any) -> None:
@@ -66,3 +68,20 @@ def test_resolve_image_uses_default_base() -> None:
 
 def test_resolve_image_uses_configured_base() -> None:
     assert resolve_image("eu.gcr.io/anna-money/postgres", "14") == "eu.gcr.io/anna-money/postgres:14"
+
+
+def test_published_port_reads_what_docker_bound() -> None:
+    client = mock.Mock()
+    client.inspect_container.return_value = {
+        "NetworkSettings": {"Ports": {"5432/tcp": [{"HostIp": "127.0.0.1", "HostPort": "54321"}]}}
+    }
+
+    assert published_port(client, "container-id") == 54321
+
+
+def test_published_port_fails_loudly_when_nothing_was_bound() -> None:
+    client = mock.Mock()
+    client.inspect_container.return_value = {"NetworkSettings": {"Ports": {"5432/tcp": None}}}
+
+    with pytest.raises(RuntimeError):
+        published_port(client, "container-id")

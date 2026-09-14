@@ -1,3 +1,8 @@
+## Unreleased
+
+* Let Docker choose the published port, so parallel workers cannot be handed the same one
+
+
 ## v0.0.29 (2026-06-02)
 
 * Configurable base image via the `pg_docker_image_name` ini option (set in `pyproject.toml`)
