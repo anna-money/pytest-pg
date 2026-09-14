@@ -1,4 +1,4 @@
-## Unreleased
+## v0.0.30 (2026-09-14)
 
 * Let Docker choose the published port, so parallel workers cannot be handed the same one
 
