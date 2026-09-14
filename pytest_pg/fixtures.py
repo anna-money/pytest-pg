@@ -8,7 +8,7 @@ import docker
 import docker.errors
 import pytest
 
-from .utils import find_unused_local_port, is_pg_ready, resolve_docker_host, resolve_image
+from .utils import is_pg_ready, published_port, resolve_docker_host, resolve_image
 
 LOCALHOST = "127.0.0.1"
 DEFAULT_PG_USER = "postgres"
@@ -33,8 +33,6 @@ def run_pg(image: str, ready_timeout: float = 30.0) -> Generator[PG, None, None]
     except docker.errors.ImageNotFound:
         docker_client.pull(image)
 
-    unused_port = find_unused_local_port()
-
     postgresql_data_path = "/var/lib/postgresql/data"
 
     container = docker_client.create_container(
@@ -43,7 +41,12 @@ def run_pg(image: str, ready_timeout: float = 30.0) -> Generator[PG, None, None]
         ports=[5432],
         detach=True,
         host_config=docker_client.create_host_config(
-            port_bindings={5432: (LOCALHOST, unused_port)}, tmpfs=[postgresql_data_path]
+            # No port of our own choosing: Docker picks one and binds it in the same breath. Choosing
+            # it here would mean naming a port that is free *now* and asking Docker to take it a
+            # moment later — and under `pytest -n auto` the moment is long enough for another worker
+            # to be handed the same number, which fails the start with "address already in use".
+            port_bindings={5432: (LOCALHOST, None)},
+            tmpfs=[postgresql_data_path],
         ),
         environment={
             "POSTGRES_HOST_AUTH_METHOD": "trust",
@@ -55,13 +58,14 @@ def run_pg(image: str, ready_timeout: float = 30.0) -> Generator[PG, None, None]
 
     try:
         docker_client.start(container=container["Id"])
+        port = published_port(docker_client, container["Id"])
 
         started_at = time.monotonic()
 
         while time.monotonic() - started_at < ready_timeout:
             if is_pg_ready(
                 host=LOCALHOST,
-                port=unused_port,
+                port=port,
                 database=DEFAULT_PG_DATABASE,
                 user=DEFAULT_PG_USER,
                 password=DEFAULT_PG_PASSWORD,
@@ -75,14 +79,15 @@ def run_pg(image: str, ready_timeout: float = 30.0) -> Generator[PG, None, None]
 
         yield PG(
             host=LOCALHOST,
-            port=unused_port,
+            port=port,
             user=DEFAULT_PG_USER,
             password=DEFAULT_PG_PASSWORD,
             database=DEFAULT_PG_DATABASE,
         )
     finally:
-        docker_client.kill(container=container["Id"])
-        docker_client.remove_container(container["Id"], v=True)
+        # Force, and one call: a container that never started cannot be killed, and a teardown that
+        # raises on that hides whatever went wrong with the start.
+        docker_client.remove_container(container["Id"], v=True, force=True)
 
 
 @pytest.fixture(scope="session")

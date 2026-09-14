@@ -1,7 +1,6 @@
 import asyncio
 import os
 import shutil
-import socket
 import subprocess
 from typing import Any, Protocol
 
@@ -89,10 +88,13 @@ is_pg_ready = (
 )
 
 
-def find_unused_local_port() -> int:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(("127.0.0.1", 0))
-        return s.getsockname()[1]  # type: ignore
+def published_port(docker_client: Any, container_id: str, container_port: int = 5432) -> int:
+    """The host port Docker bound the container's port to."""
+    ports = docker_client.inspect_container(container_id)["NetworkSettings"]["Ports"]
+    bindings = ports.get(f"{container_port}/tcp") or []
+    if not bindings:
+        raise RuntimeError(f"Container {container_id} published no host port for {container_port}/tcp")
+    return int(bindings[0]["HostPort"])
 
 
 def resolve_docker_host() -> str | None:
