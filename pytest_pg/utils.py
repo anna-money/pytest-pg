@@ -4,6 +4,8 @@ import shutil
 import subprocess
 from typing import Any, Protocol
 
+import docker
+
 
 class IsReadyFunc(Protocol):
     def __call__(
@@ -88,7 +90,7 @@ is_pg_ready = (
 )
 
 
-def published_port(docker_client: Any, container_id: str, container_port: int = 5432) -> int:
+def published_port(docker_client: docker.APIClient, container_id: str, container_port: int = 5432) -> int:
     """The host port Docker bound the container's port to."""
     ports = docker_client.inspect_container(container_id)["NetworkSettings"]["Ports"]
     bindings = ports.get(f"{container_port}/tcp") or []
