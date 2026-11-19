@@ -1,3 +1,8 @@
+## v0.0.31 (unreleased)
+
+* Under pytest-xdist the built-in fixtures share one container per run, with a database per worker (`pg_xdist_shared_container = false` to opt out); `pg.database` is then `pytest_gw0`, `pytest_gw1`, … rather than `postgres`
+
+
 ## v0.0.30 (2026-09-14)
 
 * Let Docker choose the published port, so parallel workers cannot be handed the same one
