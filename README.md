@@ -89,7 +89,10 @@ def postgres_env_vars(pg_18: pytest_pg.PG) -> Generator[None]:
 Under `pytest -n`, the built-in fixtures (`pg`, `pg_14` … `pg_18`) start one container per image for the
 whole run instead of one per worker. Each worker gets its own database inside it (`pytest_gw0`,
 `pytest_gw1`, …), so pass `pg.database` on rather than assuming `postgres`. The container is removed once
-all workers have finished. It allows 1000 connections, as the default of 100 is shared by every worker.
+all workers have finished. It gets the capacity a container per worker had: 100 connections and 64 MB of
+`/dev/shm` for each worker.
+
+Only local (`popen`) workers share; remote ones (`--tx ssh=…`) keep a container each.
 
 Databases are isolated from each other, advisory locks included; roles and server settings are shared.
 

@@ -3,13 +3,15 @@ import dataclasses
 import hashlib
 import time
 import uuid
-from collections.abc import Callable, Generator, Iterable
+from collections.abc import Callable, Generator
 from http import HTTPStatus
 from typing import Any
 
 import docker
+import docker.constants
 import docker.errors
 import pytest
+import requests
 
 from .utils import is_pg_ready, published_port, resolve_docker_host, resolve_image
 
@@ -22,9 +24,12 @@ DEFAULT_PG_DATABASE = "postgres"
 
 POSTGRESQL_DATA_PATH = "/var/lib/postgresql/data"
 PG_COMMAND = "-c fsync=off -c full_page_writes=off -c synchronous_commit=off -c bgwriter_lru_maxpages=0 -c jit=off"
-XDIST_SHARED_PG_MAX_CONNECTIONS = 1000
-XDIST_SHARED_PG_COMMAND = f"{PG_COMMAND} -c max_connections={XDIST_SHARED_PG_MAX_CONNECTIONS}"
-XDIST_TESTRUN_LABEL = "pytest-pg.xdist-testrun"
+PG_DEFAULT_MAX_CONNECTIONS = 100
+DOCKER_DEFAULT_SHM_SIZE_MB = 64
+XDIST_RUN_LABEL = "pytest-pg.xdist-run"
+XDIST_CLEANUP_DOCKER_TIMEOUT = 5
+PG_ISREADY_EXIT_CODES = {0, 1, 2, 3}
+XDIST_SHARED_RUN_ID = "pytest_pg_shared_run_id"
 
 
 @dataclasses.dataclass(frozen=True)
@@ -36,8 +41,8 @@ class PG:
     database: str
 
 
-def _docker_client() -> docker.APIClient:
-    return docker.APIClient(base_url=resolve_docker_host(), version="auto")
+def _docker_client(timeout: int = docker.constants.DEFAULT_TIMEOUT_SECONDS) -> docker.APIClient:
+    return docker.APIClient(base_url=resolve_docker_host(), version="auto", timeout=timeout)
 
 
 def _ensure_image(docker_client: docker.APIClient, image: str) -> None:
@@ -48,7 +53,12 @@ def _ensure_image(docker_client: docker.APIClient, image: str) -> None:
 
 
 def _create_container(
-    docker_client: docker.APIClient, image: str, name: str, command: str, labels: dict[str, str] | None = None
+    docker_client: docker.APIClient,
+    image: str,
+    name: str,
+    command: str,
+    labels: dict[str, str] | None = None,
+    shm_size: str | None = None,
 ) -> str:
     return docker_client.create_container(
         image=image,
@@ -63,6 +73,7 @@ def _create_container(
             # to be handed the same number, which fails the start with "address already in use".
             port_bindings={5432: (LOCALHOST, None)},
             tmpfs=[POSTGRESQL_DATA_PATH],
+            shm_size=shm_size,
         ),
         environment={
             "POSTGRES_HOST_AUTH_METHOD": "trust",
@@ -131,15 +142,25 @@ def run_pg(image: str, ready_timeout: float = READY_TIMEOUT) -> Generator[PG, No
         docker_client.remove_container(container_id, v=True, force=True)
 
 
-def _xdist_container_name(testrun_uid: str, image: str) -> str:
+def _xdist_container_name(run_id: str, image: str) -> str:
     image_hash = hashlib.blake2b(image.encode(), digest_size=4).hexdigest()
-    return f"pytest-pg-{testrun_uid}-{image_hash}"
+    return f"pytest-pg-{run_id}-{image_hash}"
 
 
-def _create_container_if_absent(docker_client: docker.APIClient, image: str, name: str, testrun_uid: str) -> None:
+def _create_container_if_absent(
+    docker_client: docker.APIClient, image: str, name: str, run_id: str, worker_count: int
+) -> None:
+    command_with_capacity_of_a_container_per_worker = (
+        f"{PG_COMMAND} -c max_connections={PG_DEFAULT_MAX_CONNECTIONS * worker_count}"
+    )
     try:
         _create_container(
-            docker_client, image, name, XDIST_SHARED_PG_COMMAND, labels={XDIST_TESTRUN_LABEL: testrun_uid}
+            docker_client,
+            image,
+            name,
+            command_with_capacity_of_a_container_per_worker,
+            labels={XDIST_RUN_LABEL: run_id},
+            shm_size=f"{DOCKER_DEFAULT_SHM_SIZE_MB * worker_count}m",
         )
     except docker.errors.APIError as error:
         another_worker_took_the_name = error.status_code == HTTPStatus.CONFLICT
@@ -161,9 +182,14 @@ def _start_once_created(docker_client: docker.APIClient, name: str, timeout: flo
 
 def _is_shared_pg_ready(docker_client: docker.APIClient, container: str, port: int) -> bool:
     try:
-        exit_code, _ = _exec(docker_client, container, ["pg_isready", "-q", "-h", "localhost"])
-    except docker.errors.APIError:
-        return False
+        exit_code, output = _exec(docker_client, container, ["pg_isready", "-q", "-h", "localhost"])
+    except docker.errors.APIError as error:
+        container_not_running_yet = error.status_code == HTTPStatus.CONFLICT
+        if container_not_running_yet:
+            return False
+        raise
+    if exit_code not in PG_ISREADY_EXIT_CODES:
+        pytest.fail(f"`pg_isready` cannot run as {DEFAULT_PG_USER} in {container} (exit code {exit_code}): {output}")
     is_final_server_accepting_tcp = exit_code == 0
     return is_final_server_accepting_tcp and _is_host_pg_ready(port)
 
@@ -183,12 +209,12 @@ def _recreate_database(docker_client: docker.APIClient, container: str, database
 
 
 @contextlib.contextmanager
-def _run_xdist_worker_pg(image: str, testrun_uid: str, worker_id: str) -> Generator[PG, None, None]:
+def _run_xdist_worker_pg(image: str, run_id: str, worker_id: str, worker_count: int) -> Generator[PG, None, None]:
     docker_client = _docker_client()
     _ensure_image(docker_client, image)
 
-    name = _xdist_container_name(testrun_uid, image)
-    _create_container_if_absent(docker_client, image, name, testrun_uid)
+    name = _xdist_container_name(run_id, image)
+    _create_container_if_absent(docker_client, image, name, run_id, worker_count)
     _start_once_created(docker_client, name, READY_TIMEOUT)
     port = published_port(docker_client, name)
 
@@ -200,30 +226,23 @@ def _run_xdist_worker_pg(image: str, testrun_uid: str, worker_id: str) -> Genera
     yield _pg_at(port, database)
 
 
-def xdist_containers(docker_client: docker.APIClient, testrun_uid: str) -> list[dict[str, Any]]:
-    return docker_client.containers(all=True, filters={"label": f"{XDIST_TESTRUN_LABEL}={testrun_uid}"})
-
-
-def remove_xdist_containers(testrun_uids: Iterable[str]) -> None:
+def remove_xdist_containers(run_id: str) -> None:
     try:
-        docker_client = _docker_client()
-        containers = [container for uid in testrun_uids for container in xdist_containers(docker_client, uid)]
-    except docker.errors.DockerException:
+        docker_client = _docker_client(timeout=XDIST_CLEANUP_DOCKER_TIMEOUT)
+        containers = docker_client.containers(all=True, filters={"label": f"{XDIST_RUN_LABEL}={run_id}"})
+    except (docker.errors.DockerException, requests.exceptions.RequestException):
         return
     for container in containers:
-        with contextlib.suppress(docker.errors.NotFound):
+        with contextlib.suppress(docker.errors.APIError, requests.exceptions.RequestException):
             docker_client.remove_container(container["Id"], v=True, force=True)
-
-
-def is_xdist_sharing_enabled(config: pytest.Config) -> bool:
-    return bool(config.getini("pg_xdist_shared_container"))
 
 
 def _run_session_pg(pytestconfig: pytest.Config, version: str) -> contextlib.AbstractContextManager[PG]:
     image = resolve_image(str(pytestconfig.getini("pg_docker_image_name")), version)
-    workerinput: dict[str, str] | None = getattr(pytestconfig, "workerinput", None)
-    if workerinput is not None and is_xdist_sharing_enabled(pytestconfig):
-        return _run_xdist_worker_pg(image, workerinput["testrunuid"], workerinput["workerid"])
+    workerinput: dict[str, Any] = getattr(pytestconfig, "workerinput", {})
+    shared_run_id = workerinput.get(XDIST_SHARED_RUN_ID)
+    if shared_run_id:
+        return _run_xdist_worker_pg(image, shared_run_id, workerinput["workerid"], workerinput["workercount"])
     return run_pg(image)
 
 

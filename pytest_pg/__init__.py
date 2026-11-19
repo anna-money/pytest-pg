@@ -1,20 +1,10 @@
+import uuid
 from importlib.metadata import version as _get_version
 from typing import Any
 
 import pytest
 
-from .fixtures import (
-    PG,
-    is_xdist_sharing_enabled,
-    pg,
-    pg_14,
-    pg_15,
-    pg_16,
-    pg_17,
-    pg_18,
-    remove_xdist_containers,
-    run_pg,
-)
+from .fixtures import PG, XDIST_SHARED_RUN_ID, pg, pg_14, pg_15, pg_16, pg_17, pg_18, remove_xdist_containers, run_pg
 
 __all__: tuple[str, ...] = (
     "PG",
@@ -29,7 +19,7 @@ __all__: tuple[str, ...] = (
 
 __version__ = _get_version("pytest_pg")
 
-_XDIST_TESTRUN_UIDS = pytest.StashKey[set[str]]()
+_XDIST_SHARED_RUN_ID = pytest.StashKey[str]()
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -48,11 +38,12 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 
 @pytest.hookimpl(optionalhook=True)
 def pytest_configure_node(node: Any) -> None:
-    if is_xdist_sharing_enabled(node.config):
-        node.config.stash.setdefault(_XDIST_TESTRUN_UIDS, set()).add(node.workerinput["testrunuid"])
+    is_local_worker = bool(node.gateway.spec.popen)
+    if is_local_worker and node.config.getini("pg_xdist_shared_container"):
+        node.workerinput[XDIST_SHARED_RUN_ID] = node.config.stash.setdefault(_XDIST_SHARED_RUN_ID, uuid.uuid4().hex)
 
 
 def pytest_unconfigure(config: pytest.Config) -> None:
-    testrun_uids = config.stash.get(_XDIST_TESTRUN_UIDS, None)
-    if testrun_uids:
-        remove_xdist_containers(testrun_uids)
+    shared_run_id = config.stash.get(_XDIST_SHARED_RUN_ID, None)
+    if shared_run_id:
+        remove_xdist_containers(shared_run_id)
