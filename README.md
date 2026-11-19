@@ -84,6 +84,26 @@ def postgres_env_vars(pg_18: pytest_pg.PG) -> Generator[None]:
 ```
 
 
+# pytest-xdist
+
+Under `pytest -n`, the built-in fixtures (`pg`, `pg_14` … `pg_18`) start one container per image for the
+whole run instead of one per worker. Each worker gets its own database inside it (`pytest_gw0`,
+`pytest_gw1`, …), so pass `pg.database` on rather than assuming `postgres`. The container is removed once
+all workers have finished. It gets the capacity a container per worker had: 100 connections and 64 MB of
+`/dev/shm` for each worker.
+
+Only local (`popen`) workers share; remote ones (`--tx ssh=…`) keep a container each.
+
+Databases are isolated from each other, advisory locks included; roles and server settings are shared.
+
+`run_pg` is not affected. To go back to a container per worker:
+
+```toml
+[tool.pytest.ini_options]
+pg_xdist_shared_container = false
+```
+
+
 # Using a custom registry
 
 By default the built-in fixtures pull `postgres:<version>` from Docker Hub. To pull from a mirror
